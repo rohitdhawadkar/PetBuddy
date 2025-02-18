@@ -1,19 +1,32 @@
-```markdown
 # 🐾 Pet Buddy: Your Smart Companion for Pet & Stray Care  
 
 ## 📌 Overview  
-Pet Buddy is an **AI-powered pet care platform** designed to help pet owners and animal welfare organizations **manage pet health efficiently**. The app provides **personalized healthcare plans, vaccination schedules, diet recommendations, and breed-specific insights** using **facial recognition technology**. It also includes a **community-driven discovery page** where pet lovers, veterinarians, and trainers can connect, share experiences, and spread awareness about responsible pet care.  
+Pet Buddy is an **AI-powered pet care platform** designed to revolutionize how pet owners and animal welfare organizations manage pet health. By leveraging cutting-edge **facial recognition technology**, the app delivers **personalized healthcare plans, vaccination schedules, diet recommendations, and breed-specific insights**. Additionally, it fosters a **vibrant community-driven discovery page** where pet lovers, veterinarians, and trainers can connect, share experiences, and promote responsible pet care.  
 
 ---
 
 ## 🚀 Features  
-- 🏥 **Personalized Healthcare** – AI-based **diet, vaccination, and training plans** tailored to your pet’s breed.  
-- 🔍 **Facial Recognition for Breed Identification** – AI-powered **breed detection** for customized care.  
-- 📅 **Health History Tracking** – Store **vaccination records, medical treatments, and pet development milestones**.  
-- 🌍 **Location-Based Vet & Trainer Recommendations** – Find **nearby veterinarians, trainers, and pet services**.  
-- 📌 **Vaccination Reminders & Community Tracker** – Stay on schedule with **vaccination alerts** and contribute to **public health tracking**.  
-- 🐕 **Discovery Page & Community Engagement** – Connect with **other pet owners, trainers, and vets** to share experiences and advice.  
-- 🛍️ **Customized Pet Shopping Recommendations** – AI-based **pet product suggestions** tailored to your pet’s needs.  
+
+### 🏥 **Personalized Healthcare**  
+- AI-driven **diet plans, vaccination schedules, and training programs** tailored to your pet’s breed, age, and health needs.  
+
+### 🔍 **Facial Recognition for Breed Identification**  
+- Advanced AI-powered **breed detection** to provide customized care recommendations and insights.  
+
+### 📅 **Health History Tracking**  
+- Centralized storage for **vaccination records, medical treatments, and developmental milestones**, ensuring you never miss a beat in your pet’s health journey.  
+
+### 🌍 **Location-Based Vet & Trainer Recommendations**  
+- Find **trusted veterinarians, trainers, and pet services** near you with real-time recommendations powered by Google Maps API.  
+
+### 📌 **Vaccination Reminders & Community Tracker**  
+- Never miss a vaccination with **smart reminders** and contribute to **public health tracking** to ensure community-wide pet wellness.  
+
+### 🐕 **Discovery Page & Community Engagement**  
+- Connect with a **global network of pet owners, trainers, and vets** to share experiences, advice, and resources.  
+
+### 🛍️ **Customized Pet Shopping Recommendations**  
+- AI-curated **product suggestions** for food, toys, and accessories tailored to your pet’s unique needs.  
 
 ---
 
