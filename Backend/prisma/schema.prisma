@@ -12,3 +12,57 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  user_id   Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(50)
+  email     String   @unique
+  password  String   @db.VarChar(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pets      Pet[] // Only for regular users
+
+  @@map("users")
+}
+
+model Vet {
+  vet_id     Int      @id @default(autoincrement())
+  username   String   @unique @db.VarChar(50)
+  email      String   @unique
+  password   String   @db.VarChar(100)
+  license_id String
+  specialty  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("vets")
+}
+
+model Trainer {
+  trainer_id       Int      @id @default(autoincrement())
+  username         String   @unique @db.VarChar(50)
+  email            String   @unique
+  password         String   @db.VarChar(100)
+  certification_id String
+  experience_years Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("trainers")
+}
+
+model Pet {
+  pet_id            Int      @id @default(autoincrement())
+  pet_name          String
+  breed             String
+  age               Int
+  weight            Float
+  pet_photo         Bytes? // Store binary data (e.g., photo)
+  medical_condition String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  userUser_id       Int? // Foreign key to User
+  User              User?    @relation(fields: [userUser_id], references: [user_id])
+
+  @@map("pets") // Optional: Maps the model to the `pets` table in the database
+}
