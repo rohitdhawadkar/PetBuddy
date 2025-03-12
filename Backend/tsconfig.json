@@ -114,6 +114,6 @@
     "outDir": "./dist"
   },
 
-  "include": ["Src/**/*"],
+  "include": ["./**/*"],
   "exclude": ["node_modules"]
 }
