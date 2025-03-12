@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/Src/server.js",
+    "start": "node dist/server.js",
     "prestart": "npm run build"
   },
   "keywords": [],

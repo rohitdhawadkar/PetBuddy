@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 
 import jwt from "jsonwebtoken";
-import Auth from "./Routes/AuthRoutes";
+import Auth from "../Routes/AuthRoutes";
 
 import dotenv from "dotenv";
 import "./Auth";
