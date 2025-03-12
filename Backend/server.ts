@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import Auth from "./Routes/AuthRoutes";
 
 import dotenv from "dotenv";
-import Auth2 from "./src/Auth";
+// import  "./src/Auth";
 
 import passport from "passport";
 
