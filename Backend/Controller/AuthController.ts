@@ -203,6 +203,12 @@ export async function LoginUser(
     if (!User) {
       return res.status(404).json({ msg: "user does not exist" });
     }
+    if (!User.password) {
+      return res.status(400).json({
+        message:
+          "Password not set. Please use Google login or reset your password.",
+      });
+    }
 
     const isPasswordValid = await bcrypt.compare(password, User.password);
 
