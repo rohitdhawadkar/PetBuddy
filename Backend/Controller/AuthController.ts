@@ -193,7 +193,7 @@ export async function LoginUser(
     if (username) {
       whereClause.username = username;
     } else {
-      whereClause.username = email;
+      whereClause.email = email;
     }
 
     const User = await prisma.user.findUnique({
