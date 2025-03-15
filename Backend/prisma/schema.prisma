@@ -26,14 +26,15 @@ model User {
 }
 
 model Vet {
-  vet_id     Int      @id @default(autoincrement())
-  username   String   @unique @db.VarChar(50)
-  email      String   @unique
-  password   String   @db.VarChar(100)
-  license_id String
-  specialty  String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  vet_id        Int             @id @default(autoincrement())
+  username      String          @unique @db.VarChar(50)
+  email         String          @unique
+  password      String          @db.VarChar(100)
+  license_id    String
+  specialty     String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  MedicalRecord MedicalRecord[]
 
   @@map("vets")
 }
@@ -52,17 +53,80 @@ model Trainer {
 }
 
 model Pet {
-  pet_id            Int      @id @default(autoincrement())
+  pet_id            Int         @id @default(autoincrement())
   pet_name          String
   breed             String
   age               Int
   weight            Float
   pet_photo         Bytes? // Store binary data (e.g., photo)
   medical_condition String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  userUser_id       Int? // Foreign key to User
-  User              User?    @relation(fields: [userUser_id], references: [user_id])
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user_id           Int? // Foreign key to User
+  User              User?       @relation(fields: [user_id], references: [user_id])
+  PetProfile        PetProfile?
 
   @@map("pets") // Optional: Maps the model to the `pets` table in the database
+}
+
+model PetProfile {
+  PetProfile_id  Int      @id @default(autoincrement())
+  Profile_pet_id Int      @unique // foreign key
+  Pet            Pet      @relation(fields: [Profile_pet_id], references: [pet_id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  HealthTracker HealthTracker?
+}
+
+model HealthTracker {
+  HealthTrackr_id Int             @id @default(autoincrement())
+  h_petProfile_id Int             @unique
+  PetProfile      PetProfile      @relation(fields: [h_petProfile_id], references: [PetProfile_id])
+  createdAt       DateTime        @default(now())
+  UpdatedAt       DateTime        @updatedAt
+  WeightTracking  WeightTracking?
+  MedicalRecord   MedicalRecord?
+  DietPlan        DietPlan?
+}
+
+model WeightTracking {
+  Weight_Tracking_id Int           @id @default(autoincrement())
+  health_tracker_id  Int           @unique
+  HealthTracker      HealthTracker @relation(fields: [health_tracker_id], references: [HealthTrackr_id])
+  Weight             Float
+  date               DateTime
+  createdAt          DateTime      @default(now())
+  UpdatedAt          DateTime      @updatedAt
+}
+
+model MedicalRecord {
+  Medical_record_id Int @id @default(autoincrement())
+  health_tracker_id Int @unique
+
+  HealthTracker HealthTracker @relation(fields: [health_tracker_id], references: [HealthTrackr_id])
+  record_type   String        @db.VarChar(50)
+  description   String        @db.VarChar(500)
+  date          DateTime
+  vet_id        Int
+  Vet           Vet           @relation(fields: [vet_id], references: [vet_id])
+  createdAt     DateTime      @default(now())
+  UpdatedAt     DateTime      @updatedAt
+}
+
+enum Status {
+  Active
+  Completed
+}
+
+model DietPlan {
+  diet_plan_id      Int           @id @default(autoincrement())
+  health_tracker_id Int           @unique
+  HealthTracker     HealthTracker @relation(fields: [health_tracker_id], references: [HealthTrackr_id])
+  plan_name         String
+  start_date        DateTime
+  status            Status
+  notes             String        @db.VarChar(500)
+  createdAt         DateTime      @default(now())
+  UpdatedAt         DateTime      @updatedAt
 }

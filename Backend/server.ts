@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 import Auth from "./Routes/AuthRoutes";
 import { getProfile } from "./Controller/getProfile";
 import "./config/passport"; // Ensure Passport strategy loads first
-
+import pet from "./Routes/PetRoutes";
+import PetProfile from "./Routes/PetProfileRoutes";
 dotenv.config();
 
 const app = express();
@@ -48,6 +49,8 @@ app.get("/profile", (req, res, next) => {
 });
 
 app.use("/Auth", Auth);
+app.use("/pet", pet);
+app.use("/petprofile", PetProfile);
 
 // Error Handler Middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
