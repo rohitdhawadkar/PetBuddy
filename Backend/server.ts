@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import passport from "passport";
+import path from "path";
 import dotenv from "dotenv";
 import Auth from "./Routes/AuthRoutes";
 import { getProfile } from "./Controller/getProfile";
@@ -20,7 +21,7 @@ app.use(express.json());
 app.use(passport.initialize());
 
 app.get("/", (req, res) => {
-  res.send('<a href="auth/google">Auth</a>');
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Google OAuth Routes
