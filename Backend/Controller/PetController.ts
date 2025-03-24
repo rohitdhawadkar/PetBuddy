@@ -63,7 +63,7 @@ export async function getAllPetForUser(
       return res.status(404).json({ msg: "No pets found for this user" });
     }
 
-    await redis.setex(cacheKey, 10, JSON.stringify(allPets));
+    await redis.setEx(cacheKey, 10, JSON.stringify(allPets));
 
     return res.status(200).json({ allPets });
   } catch (e) {

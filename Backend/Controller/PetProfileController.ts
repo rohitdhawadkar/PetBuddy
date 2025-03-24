@@ -62,7 +62,7 @@ export async function getAllPetProfilesForUser(
     };
 
     // Cache the response for 10 seconds
-    await redis.setex(cacheKey, 10, JSON.stringify(response));
+    await redis.setEx(cacheKey, 10, JSON.stringify(response));
 
     return res.status(200).json(response);
   } catch (e) {
