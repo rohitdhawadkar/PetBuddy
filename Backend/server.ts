@@ -7,6 +7,7 @@ import { getProfile } from "./Controller/getProfile";
 import "./config/passport"; // Ensure Passport strategy loads first
 import pet from "./Routes/PetRoutes";
 import PetProfile from "./Routes/PetProfileRoutes";
+import { testRedis } from "./Controller/redis";
 dotenv.config();
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(
 app.use(express.json());
 app.use(passport.initialize());
 
+testRedis();
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -44,9 +46,8 @@ app.get(
   },
 );
 
-// Fix: Add `next` parameter for proper async error handling
 app.get("/profile", (req, res, next) => {
-  getProfile(req, res, next).catch(next); // Ensures proper async error handling
+  getProfile(req, res, next).catch(next);
 });
 
 app.use("/Auth", Auth);

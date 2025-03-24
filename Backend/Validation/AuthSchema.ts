@@ -16,7 +16,6 @@ export const userRegisterSchema = z.object({
   pets: z.array(petDetailsSchema).optional(),
 });
 
-// LoginRequest schema
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required").nullable(),
   email: z.string().email("Invalid email").nullable(),

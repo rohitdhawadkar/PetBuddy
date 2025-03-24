@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "./prisma";
-
+import { redis } from "./redis";
 import axios from "axios";
 
 export interface petDetails {
@@ -23,6 +23,14 @@ export async function getAllPetProfilesForUser(
 
     if (!user_id) {
       return res.status(400).json({ msg: "User ID is required" });
+    }
+
+    // Try to get cached data first
+    const cacheKey = `user_pet_profiles:${user_id}`;
+    const cachedProfiles = await redis.get(cacheKey);
+
+    if (cachedProfiles) {
+      return res.status(200).json(JSON.parse(cachedProfiles));
     }
 
     // Make the API call as needed
@@ -48,10 +56,15 @@ export async function getAllPetProfilesForUser(
       },
     });
 
-    return res.status(200).json({
+    const response = {
       pets: pets,
       petProfiles: petProfiles,
-    });
+    };
+
+    // Cache the response for 10 seconds
+    await redis.setex(cacheKey, 10, JSON.stringify(response));
+
+    return res.status(200).json(response);
   } catch (e) {
     console.error("Error occurred while retrieving pet profiles:", e);
     return res.status(500).json({ msg: "Internal server error" });
@@ -80,6 +93,11 @@ export async function CreatePetProfile(
           Profile_pet_id: newPet.pet_id,
         },
       });
+
+      // Invalidate cache for this user's pet profiles
+      const cacheKey = `user_pet_profiles:${req.body.user_id}`;
+      await redis.del(cacheKey);
+
       return res.status(201).json({
         msg: "Pet profile created successfully",
         pet: newPet,
@@ -109,6 +127,11 @@ export async function UpdatePetProfile(
       req.body,
     );
     const UpdatedPet = response.data;
+
+    // Invalidate cache for this user's pet profiles
+    const cacheKey = `user_pet_profiles:${req.body.user_id}`;
+    await redis.del(cacheKey);
+
     return res.status(404).json({ msg: "PetProfileUpdated", UpdatedPet });
   } catch (e) {
     console.error("Error occurred while creating pet profile:", e);
@@ -154,6 +177,10 @@ export async function DeletePetProfile(
     const response = await axios.delete(
       `http://localhost:3000/pet/delete-pet/${pet_id}/${user_id}`,
     );
+
+    // Invalidate cache for this user's pet profiles
+    const cacheKey = `user_pet_profiles:${user_id}`;
+    await redis.del(cacheKey);
 
     return res.status(200).json({ msg: "Pet profile deleted successfully" });
   } catch (e) {

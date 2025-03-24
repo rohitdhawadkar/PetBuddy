@@ -1,19 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "./prisma";
+import { redis } from "./redis";
+import { CreatePetInput, UpdatePetInput, PetIdParam, UserIdParam, PetAndUserIdParams, GetPetByIdInput } from "../Validation/PetSchema";
 
-export interface petDetails {
-  pet_name: string;
-  breed: string;
-  age: number;
-  weight: number;
-
-  pet_photo: Buffer<ArrayBufferLike> | Uint8Array<ArrayBufferLike> | null;
-  medical_condition: string | null;
-  user_id: number;
-}
+export type petDetails = CreatePetInput;
 
 export async function CreatePet(
-  req: Request<{}, {}, petDetails>,
+  req: Request<{}, {}, CreatePetInput>,
   res: Response,
 ): Promise<Response> {
   const {
@@ -45,7 +38,7 @@ export async function CreatePet(
 }
 
 export async function getAllPetForUser(
-  req: Request<{ user_id: string }, {}>,
+  req: Request<UserIdParam>,
   res: Response,
 ): Promise<Response> {
   const user_id = parseInt(req.params.user_id, 10);
@@ -55,25 +48,32 @@ export async function getAllPetForUser(
       return res.status(400).json({ msg: "User ID is required" });
     }
 
+    const cacheKey = `user_pets:${user_id}`;
+    const cachedPets = await redis.get(cacheKey);
+
+    if (cachedPets) {
+      return res.status(200).json({ allPets: JSON.parse(cachedPets) });
+    }
+
     const allPets = await prisma.pet.findMany({
-      where: {
-        user_id, // Correct way to specify the where clause
-      },
+      where: { user_id },
     });
 
     if (allPets.length === 0) {
       return res.status(404).json({ msg: "No pets found for this user" });
     }
 
+    await redis.setex(cacheKey, 10, JSON.stringify(allPets));
+
     return res.status(200).json({ allPets });
   } catch (e) {
-    console.log("Error occurred while finding pets", e);
+    console.error("Error occurred while finding pets", e);
     return res.status(500).json({ msg: "Error occurred while finding pets" });
   }
 }
 
 export async function getPetForUserById(
-  req: Request<{ pet_id: number }, {}, { user_id: number }>,
+  req: Request<PetIdParam, {}, GetPetByIdInput>,
   res: Response,
 ) {
   const { pet_id } = req.params;
@@ -83,7 +83,7 @@ export async function getPetForUserById(
     const pet = await prisma.pet.findUnique({
       where: {
         user_id,
-        pet_id,
+        pet_id: parseInt(pet_id, 10),
       },
     });
     if (!pet) {
@@ -98,12 +98,12 @@ export async function getPetForUserById(
 }
 
 export async function UpdatePetForUser(
-  req: Request<{ pet_id: string }, {}, petDetails>,
+  req: Request<PetIdParam, {}, UpdatePetInput>,
   res: Response,
 ): Promise<Response> {
   const { pet_id } = req.params;
   try {
-    const pet_id = parseInt(req.params.pet_id, 10);
+    const parsedPetId = parseInt(pet_id, 10);
     const {
       pet_name,
       breed,
@@ -116,7 +116,7 @@ export async function UpdatePetForUser(
 
     const existingPet = await prisma.pet.findFirst({
       where: {
-        pet_id,
+        pet_id: parsedPetId,
         user_id,
       },
     });
@@ -127,7 +127,7 @@ export async function UpdatePetForUser(
         .json({ msg: "Pet not found or does not belong to user" });
     }
     const updatedPet = await prisma.pet.update({
-      where: { pet_id },
+      where: { pet_id: parsedPetId },
       data: {
         pet_name,
         breed,
@@ -137,6 +137,11 @@ export async function UpdatePetForUser(
         medical_condition,
       },
     });
+
+    // Remove the cached data for this user's pets
+    const cacheKey = `user_pets:${user_id}`;
+    await redis.del(cacheKey);
+
     return res
       .status(200)
       .json({ msg: "Pet updated successfully", pet: updatedPet });
@@ -147,18 +152,18 @@ export async function UpdatePetForUser(
 }
 
 export async function DeletePetForUser(
-  req: Request<{ pet_id: string; user_id: string }, {}, {}>,
+  req: Request<PetAndUserIdParams>,
   res: Response,
 ): Promise<Response> {
   const { pet_id, user_id } = req.params;
 
   try {
-    const pet_id = parseInt(req.params.pet_id, 10);
-    const user_id = parseInt(req.params.user_id, 10);
+    const parsedPetId = parseInt(pet_id, 10);
+    const parsedUserId = parseInt(user_id, 10);
     const existingPet = await prisma.pet.findFirst({
       where: {
-        pet_id,
-        user_id,
+        pet_id: parsedPetId,
+        user_id: parsedUserId,
       },
     });
 
@@ -169,9 +174,13 @@ export async function DeletePetForUser(
     }
     await prisma.pet.delete({
       where: {
-        pet_id: existingPet.pet_id, // Assuming pet_id is the primary key
+        pet_id: existingPet.pet_id,
       },
     });
+
+    // Remove the cached data for this user's pets
+    const cacheKey = `user_pets:${parsedUserId}`;
+    await redis.del(cacheKey);
 
     return res.status(200).json({ msg: "Pet deleted successfully" });
   } catch (error) {
