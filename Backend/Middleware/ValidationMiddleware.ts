@@ -3,13 +3,17 @@ import { ZodSchema, ZodError } from "zod";
 
 const v = (schema: ZodSchema<any>) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.body) {
-      res.status(400).json({ msg: "Request Body is required" });
-      return;
-    }
-
     try {
-      schema.parse(req.body);
+      // Try to validate params first, if that fails, validate body
+      try {
+        schema.parse(req.params);
+      } catch {
+        if (!req.body) {
+          res.status(400).json({ msg: "Request Body is required" });
+          return;
+        }
+        schema.parse(req.body);
+      }
       next();
     } catch (e) {
       if (e instanceof ZodError) {
@@ -19,11 +23,7 @@ const v = (schema: ZodSchema<any>) => {
         });
         return;
       }
-      res.status(500).json({
-        message: "Server error in validation.js",
-        error: (e as Error).message,
-      });
-      return;
+      next(e);
     }
   };
 };

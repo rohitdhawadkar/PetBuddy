@@ -31,42 +31,157 @@ model Vet {
   email         String          @unique
   password      String          @db.VarChar(100)
   license_id    String
-  specialty     String
+  specialty     String          @db.VarChar(100)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   MedicalRecord MedicalRecord[]
+  clinic        Clinic?         @relation(fields: [clinic_id], references: [clinic_id])
+  clinic_id     Int?
+  WorkingHours  WorkingHours[]
+  Appointments  Appointment[]
 
   @@map("vets")
 }
 
+model Clinic {
+  clinic_id     Int      @id @default(autoincrement())
+  name          String
+  address       String
+  city          String
+  state         String
+  zip_code      String
+  phone         String
+  email         String?
+  website       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  vets          Vet[]
+
+  @@map("clinics")
+}
+
 model Trainer {
-  trainer_id       Int      @id @default(autoincrement())
-  username         String   @unique @db.VarChar(50)
-  email            String   @unique
-  password         String   @db.VarChar(100)
+  trainer_id       Int              @id @default(autoincrement())
+  username         String           @unique @db.VarChar(50)
+  email            String           @unique
+  password         String           @db.VarChar(100)
   certification_id String
   experience_years Int
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  TrainingStyle    TrainingStyle?
+  WorkingHours     TrainerWorkingHours[]
+  Sessions         TrainingSession[]
+  Progress         TrainingProgress[]
 
   @@map("trainers")
 }
 
+model TrainingStyle {
+  style_id          Int      @id @default(autoincrement())
+  trainer_id        Int      @unique
+  trainer           Trainer  @relation(fields: [trainer_id], references: [trainer_id])
+  primary_style     String   @db.VarChar(50)  // e.g., "Positive Reinforcement", "Clicker Training"
+  secondary_style   String?  @db.VarChar(50)
+  methodology       String   @db.VarChar(500) // Detailed description of training approach
+  specializations   String[] // Array of specializations
+  certifications    String[] // Array of additional certifications
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("training_styles")
+}
+
+model TrainerWorkingHours {
+  working_hours_id Int      @id @default(autoincrement())
+  trainer_id       Int
+  trainer          Trainer  @relation(fields: [trainer_id], references: [trainer_id])
+  day_of_week      Int      // 0-6 for Sunday-Saturday
+  start_time       DateTime
+  end_time         DateTime
+  is_available     Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([trainer_id, day_of_week])
+  @@map("trainer_working_hours")
+}
+
+model TrainingSession {
+  session_id       Int             @id @default(autoincrement())
+  trainer_id       Int
+  trainer          Trainer         @relation(fields: [trainer_id], references: [trainer_id])
+  pet_id           Int
+  pet              Pet             @relation(fields: [pet_id], references: [pet_id])
+  session_date     DateTime
+  start_time       DateTime
+  end_time         DateTime
+  status           SessionStatus   @default(SCHEDULED)
+  session_type     SessionType
+  focus_areas      String[]        // Array of areas to focus on
+  notes            String?         @db.VarChar(500)
+  progress_notes   String?         @db.VarChar(1000)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@map("training_sessions")
+}
+
+model TrainingProgress {
+  progress_id      Int             @id @default(autoincrement())
+  trainer_id       Int
+  trainer          Trainer         @relation(fields: [trainer_id], references: [trainer_id])
+  pet_id           Int
+  pet              Pet             @relation(fields: [pet_id], references: [pet_id])
+  skill_name       String          @db.VarChar(100)
+  current_level    Int             // 1-5 scale
+  target_level     Int             // 1-5 scale
+  last_assessed    DateTime
+  assessment_notes String?         @db.VarChar(500)
+  next_steps       String?         @db.VarChar(500)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@unique([trainer_id, pet_id, skill_name])
+  @@map("training_progress")
+}
+
+enum SessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum SessionType {
+  PRIVATE
+  GROUP
+  BEHAVIORAL
+  AGILITY
+  OBEDIENCE
+  PUPPY
+  ADVANCED
+}
+
 model Pet {
-  pet_id            Int         @id @default(autoincrement())
+  pet_id            Int              @id @default(autoincrement())
   pet_name          String
   breed             String
   age               Int
   weight            Float
-  pet_photo         Bytes? // Store binary data (e.g., photo)
+  pet_photo         Bytes?           // Store binary data (e.g., photo)
   medical_condition String?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  user_id           Int? // Foreign key to User
-  User              User?       @relation(fields: [user_id], references: [user_id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  user_id           Int?             // Foreign key to User
+  User              User?            @relation(fields: [user_id], references: [user_id])
   PetProfile        PetProfile?
+  appointments      Appointment[]    // Add relation to appointments
+  training_sessions TrainingSession[] // Add relation to training sessions
+  training_progress TrainingProgress[] // Add relation to training progress
 
-  @@map("pets") // Optional: Maps the model to the `pets` table in the database
+  @@map("pets")
 }
 
 model PetProfile {
@@ -130,3 +245,61 @@ model DietPlan {
   createdAt         DateTime      @default(now())
   UpdatedAt         DateTime      @updatedAt
 }
+
+model WorkingHours {
+  working_hours_id Int      @id @default(autoincrement())
+  vet_id          Int
+  vet             Vet      @relation(fields: [vet_id], references: [vet_id])
+  day_of_week     Int      // 0-6 for Sunday-Saturday
+  start_time      DateTime
+  end_time        DateTime
+  is_available    Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([vet_id, day_of_week])
+  @@map("working_hours")
+}
+
+model Appointment {
+  appointment_id   Int       @id @default(autoincrement())
+  vet_id          Int
+  vet             Vet       @relation(fields: [vet_id], references: [vet_id])
+  pet_id          Int
+  pet             Pet       @relation(fields: [pet_id], references: [pet_id])
+  appointment_date DateTime
+  start_time      DateTime
+  end_time        DateTime
+  status          AppointmentStatus @default(SCHEDULED)
+  notes           String?   @db.VarChar(500)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Admin {
+  admin_id        Int       @id @default(autoincrement())
+  username        String    @unique
+  email           String    @unique
+  password        String
+  first_name      String
+  last_name       String
+  phone           String?
+ 
+  is_active       Boolean   @default(true)
+  last_login      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@map("admins")
+}
+
+

@@ -41,7 +41,7 @@ export interface VetRegisterRequest {
   password: string;
   email: string;
   license_id: string;
-  specialty: string;
+  specialty: string[];
 }
 
 export async function RegisterUser(
@@ -158,17 +158,17 @@ export async function RegisterVet(
         password: hashedPassword,
         email,
         license_id,
-        specialty,
+        specialty: Array.isArray(specialty) ? specialty.join(', ') : specialty || ''
       },
     });
 
-    return res.status(404).json({
+    return res.status(201).json({
       msg: "Vet registration successful",
       newVet: newVet,
     });
   } catch (e) {
-    console.log("error occured during registering vet ", e);
-    return res.status(404).json({ msg: "internal server error" });
+    console.error("error occurred during registering vet ", e);
+    return res.status(500).json({ msg: "internal server error" });
   }
 }
 

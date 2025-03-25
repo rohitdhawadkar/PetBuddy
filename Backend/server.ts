@@ -8,6 +8,14 @@ import "./config/passport"; // Ensure Passport strategy loads first
 import pet from "./Routes/PetRoutes";
 import PetProfile from "./Routes/PetProfileRoutes";
 import { testRedis } from "./Controller/redis";
+import healthRoutes from './Routes/HealthRoutes';
+import TrainingSessionRoutes from './Routes/TrainingSessionRoutes';
+import TrainingStyleRoutes from "./Routes/TrainingStyleRoutes";
+import TrainingProgressRoutes from "./Routes/TrainingProgressRoutes";
+import TrainerWorkingHoursRoutes from "./Routes/TrainerWorkingHoursRoutes";
+import ClinicRoute from "./Routes/ClinicRoutes";
+import AdminRoute from "./Routes/AdminRoutes";
+import VetRoute from "./Routes/VetRoutes"
 dotenv.config();
 
 const app = express();
@@ -53,6 +61,14 @@ app.get("/profile", (req, res, next) => {
 app.use("/Auth", Auth);
 app.use("/pet", pet);
 app.use("/petprofile", PetProfile);
+app.use('/health', healthRoutes);
+app.use("/training-session", TrainingSessionRoutes);
+app.use("/training-style", TrainingStyleRoutes);
+app.use("/training-progress", TrainingProgressRoutes);
+app.use("/trainer-working-hours", TrainerWorkingHoursRoutes);
+app.use("/clinic",ClinicRoute);
+app.use("/admin",AdminRoute);
+app.use("/vet",VetRoute);
 
 // Error Handler Middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

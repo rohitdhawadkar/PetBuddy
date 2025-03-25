@@ -72,30 +72,37 @@ export async function getAllPetForUser(
   }
 }
 
-export async function getPetForUserById(
-  req: Request<PetIdParam, {}, GetPetByIdInput>,
-  res: Response,
-) {
-  const { pet_id } = req.params;
-  const { user_id } = req.body;
-
+export const getPetForUserById = async (req: Request<GetPetByIdInput>, res: Response) => {
   try {
-    const pet = await prisma.pet.findUnique({
+    const { user_id, pet_id } = req.params;
+    const parsedUserId = parseInt(user_id);
+    const parsedPetId = parseInt(pet_id);
+
+    const pet = await prisma.pet.findFirst({
       where: {
-        user_id,
-        pet_id: parseInt(pet_id, 10),
+        pet_id: parsedPetId,
+        user_id: parsedUserId,
       },
     });
+
     if (!pet) {
-      return res.status(404).json({ msg: "pet not found" });
+      return res.status(404).json({
+        message: "Pet not found",
+      });
     }
 
-    return res.status(201).json({ pet });
-  } catch (e) {
-    console.log("Error occured while finding pet", e);
-    return res.status(404).json({ msg: "Error occured while finding pet" });
+    return res.status(200).json({
+      message: "Pet retrieved successfully",
+      data: pet,
+    });
+  } catch (error) {
+    console.error("Error in getPetForUserById:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    });
   }
-}
+};
 
 export async function UpdatePetForUser(
   req: Request<PetIdParam, {}, UpdatePetInput>,

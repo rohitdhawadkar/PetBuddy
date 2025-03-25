@@ -51,7 +51,14 @@ export const petAndUserIdParamsSchema = z.object({
 
 // Schema for validating request body in getPetForUserById
 export const getPetByIdSchema = z.object({
-  user_id: z.number().int().positive("User ID must be a positive number")
+  user_id: z.string().refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    "Invalid user ID"
+  ),
+  pet_id: z.string().refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    "Invalid pet ID"
+  )
 });
 
 // Type inference

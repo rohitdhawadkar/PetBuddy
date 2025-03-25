@@ -1,45 +1,55 @@
-import { Router } from "express";
-
-const router: Router = Router();
+import { Router, Request, Response, NextFunction } from "express";
+import {
+  authenticateUser,
+  checkResourceOwnership,
+} from "../Middleware/AuthMiddleware";
 import {
   CreatePetProfile,
   UpdatePetProfile,
   DeletePetProfile,
-  petDetails,
   getAllPetProfilesForUser,
 } from "../Controller/PetProfileController";
-import { DeletePetForUser } from "../Controller/PetController";
+import { PetIdParam, UserIdParam, PetAndUserIdParams } from "../Validation/PetSchema";
 
-router.post<{}, {}, petDetails>("/create-pet-profile", (req, res, next) => {
-  CreatePetProfile(req, res).catch(next);
-});
-// Router definition
-router.get<{ user_id: number }, {}>(
+const router: Router = Router();
+
+router.get(
   "/get-pet-profile/:user_id",
-  (req, res, next) => {
+  authenticateUser,
+  checkResourceOwnership,
+  (req: Request<UserIdParam>, res: Response, next: NextFunction) => {
     getAllPetProfilesForUser(req, res).catch(next);
-  },
+  }
 );
 
-router.put<{ pet_id: string }, {}, petDetails>(
+// Create pet profile
+router.post(
+  "/create-pet-profile",
+  authenticateUser,
+  checkResourceOwnership,
+  (req: Request, res: Response, next: NextFunction) => {
+    CreatePetProfile(req, res).catch(next);
+  }
+);
+
+// Update pet profile
+router.put(
   "/update-pet-profile/:pet_id",
-  (req, res, next) => {
+  authenticateUser,
+  checkResourceOwnership,
+  (req: Request<PetIdParam>, res: Response, next: NextFunction) => {
     UpdatePetProfile(req, res).catch(next);
-  },
+  }
 );
 
-// router.delete<
-//   { pet_id: number; PetProfile_id: number; user_id: number },
-//   {},
-//   {}
-// >("/delete-pet-profile/:pet_id/:petProfile_id/:user_id", (req, res, next) => {
-//   DeletePetProfile(req, res).catch(next);
-// });
-
+// Delete pet profile
 router.delete(
-  "/delete-pet-profile/:pet_id/:petProfile_id/:user_id",
-  (req, res, next) => {
+  "/delete-pet-profile/:petProfile_id/:pet_id/:user_id",
+  authenticateUser,
+  checkResourceOwnership,
+  (req: Request<PetAndUserIdParams & { petProfile_id: string }>, res: Response, next: NextFunction) => {
     DeletePetProfile(req, res).catch(next);
-  },
+  }
 );
+
 export default router;
