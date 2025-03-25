@@ -1,28 +1,46 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { useDarkMode } from "../contexts/DarkModeContext";
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-white dark:bg-gray-900">
       {/* Header */}
       <header className="fixed w-full">
-        <nav className="bg-white border-gray-200 py-2.5">
+        <nav className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 py-2.5">
           <div className="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
             <a href="#" className="flex items-center">
-              <span className="self-center text-xl font-semibold whitespace-nowrap text-gray-800">PetBuddy</span>
+              <img className="w-8 h-8 mr-2" src="/images/logo.png" alt="PetBuddy logo" />
+              <span className="self-center text-xl font-semibold whitespace-nowrap text-gray-800 dark:text-white">PetBuddy</span>
             </a>
             <div className="flex items-center lg:order-2">
               <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors mr-2"
+                title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDarkMode ? (
+                  <svg className="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+              <button
                 onClick={() => navigate('/login')}
-                className="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none"
+                className="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none dark:focus:ring-green-800"
               >
                 Log in
               </button>
               <button
                 onClick={() => navigate('/signup')}
-                className="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
+                className="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none dark:focus:ring-green-800"
               >
                 Get Started
               </button>
@@ -30,16 +48,16 @@ const LandingPage: React.FC = () => {
             <div className="items-center justify-between hidden w-full lg:flex lg:w-auto lg:order-1">
               <ul className="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
                 <li>
-                  <a href="#" className="block py-2 pl-3 pr-4 text-green-600 rounded lg:bg-transparent lg:text-green-600 lg:p-0">Home</a>
+                  <a href="#" className="block py-2 pl-3 pr-4 text-green-600 rounded lg:bg-transparent lg:text-green-600 lg:p-0 dark:text-green-500">Home</a>
                 </li>
                 <li>
-                  <a href="#" className="block py-2 pl-3 pr-4 text-gray-700 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 lg:hover:text-green-600 lg:p-0">Services</a>
+                  <a href="#" className="block py-2 pl-3 pr-4 text-gray-700 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 lg:hover:text-green-600 lg:p-0 dark:text-gray-400 dark:hover:text-green-500 dark:hover:bg-gray-700 lg:dark:hover:bg-transparent">Services</a>
                 </li>
                 <li>
-                  <a href="#" className="block py-2 pl-3 pr-4 text-gray-700 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 lg:hover:text-green-600 lg:p-0">About</a>
+                  <a href="#" className="block py-2 pl-3 pr-4 text-gray-700 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 lg:hover:text-green-600 lg:p-0 dark:text-gray-400 dark:hover:text-green-500 dark:hover:bg-gray-700 lg:dark:hover:bg-transparent">About</a>
                 </li>
                 <li>
-                  <a href="#" className="block py-2 pl-3 pr-4 text-gray-700 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 lg:hover:text-green-600 lg:p-0">Contact</a>
+                  <a href="#" className="block py-2 pl-3 pr-4 text-gray-700 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 lg:hover:text-green-600 lg:p-0 dark:text-gray-400 dark:hover:text-green-500 dark:hover:bg-gray-700 lg:dark:hover:bg-transparent">Contact</a>
                 </li>
               </ul>
             </div>
@@ -48,19 +66,19 @@ const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-white">
+      <section className="bg-white dark:bg-gray-900 pt-16">
         <div className="grid max-w-screen-xl px-4 pt-20 pb-8 mx-auto lg:gap-8 xl:gap-0 lg:py-16 lg:grid-cols-12 lg:pt-28">
           <div className="mr-auto place-self-center lg:col-span-7">
-            <h1 className="max-w-2xl mb-4 text-4xl font-extrabold leading-none tracking-tight md:text-5xl xl:text-6xl text-gray-900">
+            <h1 className="max-w-2xl mb-4 text-4xl font-extrabold leading-none tracking-tight md:text-5xl xl:text-6xl text-gray-900 dark:text-white">
               Your Pet's Health, Our Priority
             </h1>
-            <p className="max-w-2xl mb-6 font-light text-gray-500 lg:mb-8 md:text-lg lg:text-xl">
+            <p className="max-w-2xl mb-6 font-light text-gray-500 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400">
               Manage your pet's health records, appointments, and care needs all in one place. Join thousands of pet owners who trust PetBuddy for their pet care needs.
             </p>
             <div className="space-y-4 sm:flex sm:space-y-0 sm:space-x-4">
               <button
                 onClick={() => navigate('/signup')}
-                className="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-center text-white bg-green-600 rounded-lg sm:w-auto hover:bg-green-700 focus:ring-4 focus:ring-green-300"
+                className="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-center text-white bg-green-600 rounded-lg sm:w-auto hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800"
               >
                 Get Started
                 <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
@@ -69,7 +87,7 @@ const LandingPage: React.FC = () => {
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-center text-gray-900 border border-gray-300 rounded-lg sm:w-auto hover:bg-gray-100 focus:ring-4 focus:ring-gray-100"
+                className="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-center text-gray-900 border border-gray-300 rounded-lg sm:w-auto hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 dark:text-white dark:border-gray-700 dark:hover:bg-gray-700 dark:focus:ring-gray-800"
               >
                 Learn More
               </button>
@@ -82,30 +100,30 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="bg-gray-50">
+      <section className="bg-gray-50 dark:bg-gray-800">
         <div className="max-w-screen-xl px-4 py-8 mx-auto space-y-12 lg:space-y-20 lg:py-24 lg:px-6">
           <div className="items-center gap-8 lg:grid lg:grid-cols-2 xl:gap-16">
-            <div className="text-gray-500 sm:text-lg">
-              <h2 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900">Everything your pet needs in one place</h2>
+            <div className="text-gray-500 sm:text-lg dark:text-gray-400">
+              <h2 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Everything your pet needs in one place</h2>
               <p className="mb-8 font-light lg:text-xl">Manage your pet's health records, schedule appointments, and track medications all in one convenient platform. PetBuddy makes pet care simple and stress-free.</p>
-              <ul role="list" className="pt-8 space-y-5 border-t border-gray-200 my-7">
+              <ul role="list" className="pt-8 space-y-5 border-t border-gray-200 dark:border-gray-700 my-7">
                 <li className="flex space-x-3">
                   <svg className="flex-shrink-0 w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-base font-medium leading-tight text-gray-900">Digital Health Records</span>
+                  <span className="text-base font-medium leading-tight text-gray-900 dark:text-white">Digital Health Records</span>
                 </li>
                 <li className="flex space-x-3">
                   <svg className="flex-shrink-0 w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-base font-medium leading-tight text-gray-900">Easy Appointment Scheduling</span>
+                  <span className="text-base font-medium leading-tight text-gray-900 dark:text-white">Easy Appointment Scheduling</span>
                 </li>
                 <li className="flex space-x-3">
                   <svg className="flex-shrink-0 w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-base font-medium leading-tight text-gray-900">Medication Reminders</span>
+                  <span className="text-base font-medium leading-tight text-gray-900 dark:text-white">Medication Reminders</span>
                 </li>
               </ul>
             </div>
@@ -115,13 +133,13 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-white">
+      <section className="bg-white dark:bg-gray-900">
         <div className="max-w-screen-xl px-4 py-8 mx-auto text-center lg:py-24 lg:px-6">
-          <h2 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900">Ready to give your pet the best care?</h2>
-          <p className="mb-8 font-light text-gray-500 sm:text-xl">Join thousands of pet owners who trust PetBuddy for their pet care needs.</p>
+          <h2 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Ready to give your pet the best care?</h2>
+          <p className="mb-8 font-light text-gray-500 dark:text-gray-400 sm:text-xl">Join thousands of pet owners who trust PetBuddy for their pet care needs.</p>
           <button
             onClick={() => navigate('/signup')}
-            className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300"
+            className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800"
           >
             Get Started Today
             <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
@@ -132,12 +150,12 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-50">
+      <footer className="bg-gray-50 dark:bg-gray-800">
         <div className="max-w-screen-xl p-4 py-6 mx-auto lg:py-16 md:p-8 lg:p-10">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
             <div>
-              <h3 className="mb-6 text-sm font-semibold text-gray-900 uppercase">Company</h3>
-              <ul className="text-gray-500">
+              <h3 className="mb-6 text-sm font-semibold text-gray-900 uppercase dark:text-white">Company</h3>
+              <ul className="text-gray-500 dark:text-gray-400">
                 <li className="mb-4">
                   <a href="#" className="hover:underline">About</a>
                 </li>
@@ -150,8 +168,8 @@ const LandingPage: React.FC = () => {
               </ul>
             </div>
             <div>
-              <h3 className="mb-6 text-sm font-semibold text-gray-900 uppercase">Help center</h3>
-              <ul className="text-gray-500">
+              <h3 className="mb-6 text-sm font-semibold text-gray-900 uppercase dark:text-white">Help center</h3>
+              <ul className="text-gray-500 dark:text-gray-400">
                 <li className="mb-4">
                   <a href="#" className="hover:underline">Contact Us</a>
                 </li>
@@ -164,8 +182,8 @@ const LandingPage: React.FC = () => {
               </ul>
             </div>
             <div>
-              <h3 className="mb-6 text-sm font-semibold text-gray-900 uppercase">Legal</h3>
-              <ul className="text-gray-500">
+              <h3 className="mb-6 text-sm font-semibold text-gray-900 uppercase dark:text-white">Legal</h3>
+              <ul className="text-gray-500 dark:text-gray-400">
                 <li className="mb-4">
                   <a href="#" className="hover:underline">Privacy Policy</a>
                 </li>
@@ -178,9 +196,9 @@ const LandingPage: React.FC = () => {
               </ul>
             </div>
           </div>
-          <hr className="my-6 border-gray-200 sm:mx-auto lg:my-8" />
+          <hr className="my-6 border-gray-200 dark:border-gray-700 sm:mx-auto lg:my-8" />
           <div className="text-center">
-            <span className="block text-sm text-center text-gray-500">© 2024 PetBuddy™. All Rights Reserved.</span>
+            <span className="block text-sm text-center text-gray-500 dark:text-gray-400">© 2024 PetBuddy™. All Rights Reserved.</span>
           </div>
         </div>
       </footer>
