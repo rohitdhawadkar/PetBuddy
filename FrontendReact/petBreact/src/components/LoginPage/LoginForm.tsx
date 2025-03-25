@@ -68,8 +68,8 @@ const LoginPage: React.FC = () => {
       
       console.log("Formatted login credentials:", credentials);
       
-      // Call the login API
-      const response = await authService.login(credentials);
+      // Call the login API and ignore the response
+      await authService.login(credentials);
       
       // If successful, navigate to the dashboard
       navigate('/dashboard');

@@ -59,7 +59,7 @@ const SignUpForm: React.FC = () => {
       };
       
       // Call the register API
-      const response = await authService.register(userData);
+      await authService.register(userData);
       
       // If successful, navigate to login page with success message
       navigate('/login', { state: { registrationSuccess: true } });
