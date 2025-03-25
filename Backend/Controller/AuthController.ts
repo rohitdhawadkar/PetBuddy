@@ -176,6 +176,7 @@ export async function LoginUser(
   req: Request<{}, {}, LoginRequest>,
   res: Response,
 ): Promise<Response> {
+  console.log("login user called");
   const { username, email, password } = req.body;
 
   if (username && email) {

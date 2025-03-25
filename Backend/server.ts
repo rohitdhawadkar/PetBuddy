@@ -16,15 +16,22 @@ import TrainerWorkingHoursRoutes from "./Routes/TrainerWorkingHoursRoutes";
 import ClinicRoute from "./Routes/ClinicRoutes";
 import AdminRoute from "./Routes/AdminRoutes";
 import VetRoute from "./Routes/VetRoutes"
+import cors from "cors";
 dotenv.config();
 
 const app = express();
-app.use(
-  require("cors")({
-    origin: "http://localhost:3000", // or your frontend URL
-    credentials: true,
-  }),
-);
+
+// Configure CORS to allow requests from your frontend
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://pet-buddy-bf2rbyh90-rohitdhawadkars-projects.vercel.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));    
 
 app.use(express.json());
 app.use(passport.initialize());
