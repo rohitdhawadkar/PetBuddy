@@ -1,9 +1,7 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 import { useDarkMode } from "../../contexts/DarkModeContext";
 
 const Dashboard: React.FC = () => {
-  const _navigate = useNavigate();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [activeTab, setActiveTab] = React.useState("appointments");
 
