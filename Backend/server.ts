@@ -26,7 +26,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3000',
-    'https://pet-buddy-bf2rbyh90-rohitdhawadkars-projects.vercel.app'
+    'https://pet-buddy-bf2rbyh90-rohitdhawadkars-projects.vercel.app',
+    "https://pet-buddy-rohitdhawadkars-projects.vercel.app"
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
