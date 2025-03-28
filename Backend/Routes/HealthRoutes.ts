@@ -13,14 +13,14 @@ const router = express.Router();
 // Health Tracker Routes
 router.post(
   "/health-tracker",
-  authenticateVet,
+  authenticateUser,
   validateRequest(healthTrackerSchema),
   CreateHealthTracker
 );
 
 router.get(
   "/health-tracker/:h_petProfile_id",
-  authenticateUser,
+ 
   GetHealthTracker
 );
 
@@ -66,7 +66,7 @@ router.delete(
 
 // Medical Record Routes
 router.post(
-  "/medical-record",
+  "/medical-record/:health_tracker_id",
   authenticateUser,
   validateRequest(medicalRecordSchema),
   CreateMedicalRecord

@@ -158,7 +158,7 @@ export async function UpdatePetProfile(
     const cacheKey = `user_pet_profiles:${req.body.user_id}`;
     await redis.del(cacheKey);
 
-    res.status(404).json({ msg: "PetProfileUpdated", UpdatedPet });
+    res.status(200).json({ msg: "PetProfileUpdated", UpdatedPet });
   } catch (e) {
     console.error("Error occurred while creating pet profile:", e);
     res.status(500).json({ msg: "Internal server error" });

@@ -4,8 +4,8 @@ import { redis } from "./redis";
 
 // Create Medical Record
 export async function CreateMedicalRecord(
-  req: Request<{}, {}, {
-    health_tracker_id: number;
+  req: Request<{ health_tracker_id?: string }, {}, {
+    health_tracker_id?: number;
     record_type: string;
     description: string;
     date: Date;
@@ -14,11 +14,31 @@ export async function CreateMedicalRecord(
   res: Response
 ): Promise<void> {
   try {
-    const { health_tracker_id, record_type, description, date, vet_id } = req.body;
+    const { record_type, description, date, vet_id } = req.body;
+    // Check both body and params for the health_tracker_id
+    let health_tracker_id = req.body.health_tracker_id;
+    
+    // If not found in body, check params
+    if (!health_tracker_id && req.params.health_tracker_id) {
+      health_tracker_id = parseInt(req.params.health_tracker_id, 10);
+    }
+    
+    console.log("CreateMedicalRecord received:", { 
+      bodyId: req.body.health_tracker_id, 
+      paramsId: req.params.health_tracker_id,
+      parsedId: health_tracker_id
+    });
+
+    if (!health_tracker_id) {
+      res.status(400).json({ message: "health_tracker_id is required" });
+      return;
+    }
 
     // Check if health tracker exists
     const healthTracker = await prisma.healthTracker.findUnique({
-      where: { HealthTrackr_id: health_tracker_id },
+      where: {
+        HealthTrackr_id: Number(health_tracker_id),
+      }
     });
 
     if (!healthTracker) {
@@ -36,26 +56,53 @@ export async function CreateMedicalRecord(
       return;
     }
 
-    const medicalRecord = await prisma.medicalRecord.create({
-      data: {
-        health_tracker_id,
-        record_type,
-        description,
-        date,
-        vet_id,
-      },
-      include: {
-        HealthTracker: true,
-        Vet: true,
-      },
+    // Check if a medical record already exists for this health tracker
+    const existingRecord = await prisma.medicalRecord.findUnique({
+      where: { health_tracker_id },
     });
+
+    let medicalRecord;
+    
+    if (existingRecord) {
+      // Update the existing record instead of creating a new one
+      medicalRecord = await prisma.medicalRecord.update({
+        where: { health_tracker_id },
+        data: {
+          record_type,
+          description,
+          date,
+          vet_id,
+        },
+        include: {
+          HealthTracker: true,
+          Vet: true,
+        },
+      });
+    } else {
+      // Create a new record if none exists
+      medicalRecord = await prisma.medicalRecord.create({
+        data: {
+          health_tracker_id,
+          record_type,
+          description,
+          date,
+          vet_id,
+        },
+        include: {
+          HealthTracker: true,
+          Vet: true,
+        },
+      });
+    }
 
     // Invalidate cache
     const cacheKey = `medical_record:${health_tracker_id}`;
     await redis.del(cacheKey);
 
     res.status(201).json({
-      message: "Medical record created successfully",
+      message: existingRecord 
+        ? "Medical record updated successfully" 
+        : "Medical record created successfully",
       data: medicalRecord,
     });
   } catch (error) {

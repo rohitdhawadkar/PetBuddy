@@ -31,4 +31,11 @@ export const adminIdParamSchema = z.object({
 // Type definitions
 export type CreateAdminInput = z.infer<typeof createAdminSchema>;
 export type UpdateAdminInput = z.infer<typeof updateAdminSchema>;
-export type AdminIdParam = z.infer<typeof adminIdParamSchema>; 
+export type AdminIdParam = z.infer<typeof adminIdParamSchema>;
+
+export const adminLoginSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export type AdminLoginInput = z.infer<typeof adminLoginSchema>; 

@@ -16,7 +16,7 @@ const router: Router = Router();
 router.get(
   "/get-pet-profile/:user_id",
   authenticateUser,
-  checkResourceOwnership,
+  // checkResourceOwnership,
   (req: Request<UserIdParam>, res: Response, next: NextFunction) => {
     getAllPetProfilesForUser(req, res).catch(next);
   }

@@ -14,7 +14,7 @@ export const CreateAppointment = async (req: Request, res: Response): Promise<vo
       end_time,
       status = "SCHEDULED",
       notes
-    } = req.body;
+    } = req.body.body;
 
     // Check if vet exists
     const vet = await prisma.vet.findUnique({
@@ -257,6 +257,59 @@ export const DeleteAppointment = async (req: Request, res: Response): Promise<vo
     console.error("Error deleting appointment:", error);
     res.status(500).json({
       message: "Error deleting appointment",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+};
+
+// Get appointments for a user (all pets)
+export const GetUserAppointments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+
+    if (isNaN(userId)) {
+      res.status(400).json({ message: "Invalid user ID" });
+      return;
+    }
+
+    // Get all appointments for the user's pets in a single query
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        pet: {
+          user_id: userId
+        }
+      },
+      include: {
+        pet: {
+          select: {
+            pet_name: true,
+            breed: true
+          }
+        },
+        vet: {
+          select: {
+            username: true,
+            specialty: true
+          }
+        }
+      },
+      orderBy: {
+        appointment_date: 'asc'
+      }
+    });
+
+    // Cache the appointments
+    const cacheKey = `user_appointments:${userId}`;
+    await redis.setEx(cacheKey, 3600, JSON.stringify(appointments));
+
+    res.status(200).json({
+      message: "Appointments fetched successfully",
+      data: appointments
+    });
+  } catch (error) {
+    console.error("Error fetching user appointments:", error);
+    res.status(500).json({
+      message: "Error fetching appointments",
       error: error instanceof Error ? error.message : "Unknown error"
     });
   }

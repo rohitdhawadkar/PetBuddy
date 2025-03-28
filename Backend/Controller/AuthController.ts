@@ -181,12 +181,12 @@ export async function LoginUser(
 
   if (username && email) {
     return res
-      .status(404)
-      .json({ msg: "provide only one of username or email" });
+      .status(400)
+      .json({ msg: "Provide only one of username or email" });
   }
 
   if (!username && !email) {
-    return res.status(404).json({ msg: "provide atleast username or email" });
+    return res.status(400).json({ msg: "Provide at least username or email" });
   }
 
   try {
@@ -197,45 +197,54 @@ export async function LoginUser(
       whereClause.email = email;
     }
 
-    const User = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: whereClause,
+      select: {
+        user_id: true,
+        username: true,
+        email: true,
+        password: true,
+      },
     });
 
-    if (!User) {
-      return res.status(404).json({ msg: "user does not exist" });
+    if (!user) {
+      return res.status(404).json({ msg: "User does not exist" });
     }
-    if (!User.password) {
+
+    if (!user.password) {
       return res.status(400).json({
-        message:
-          "Password not set. Please use Google login or reset your password.",
+        message: "Password not set. Please use Google login or reset your password.",
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, User.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(404).json({ msg: "incorrect password" });
+      return res.status(401).json({ msg: "Incorrect password" });
     }
 
     const token = jwt.sign(
-      { user_id: User.user_id, username: User.username },
+      { 
+        user_id: user.user_id,
+        username: user.username || email // Use email as fallback for username
+      },
       process.env.JWT_SECRET || "jwt_secret",
-      { expiresIn: "1h" },
+      { expiresIn: "1h" }
     );
 
     return res.status(200).json({
       msg: "Login successful",
       token,
       user: {
-        user_id: User.user_id,
-        username: User.username,
-        email: User.email,
+        user_id: user.user_id,
+        username: user.username || email, // Use email as fallback for username in response
+        email: user.email,
       },
     });
-  } catch (e) {
-    console.log("error while logging in", e);
-    return res.status(404).json({
-      msg: "error",
+  } catch (error) {
+    console.error("Error while logging in:", error);
+    return res.status(500).json({
+      msg: "Internal server error",
     });
   }
 }

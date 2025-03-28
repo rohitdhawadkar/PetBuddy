@@ -94,6 +94,15 @@ export const appointmentIdParamSchema = z.object({
   }),
 });
 
+export const userIdParamSchema = z.object({
+  params: z.object({
+    userId: z.string().refine(
+      (val) => !isNaN(Number(val)) && Number(val) > 0,
+      "Invalid user ID"
+    ),
+  }),
+});
+
 // Types
 export type CreateClinicInput = z.infer<typeof createClinicSchema>["body"];
 export type UpdateClinicInput = z.infer<typeof updateClinicSchema>["body"];
@@ -104,4 +113,5 @@ export type WorkingHoursIdParam = z.infer<typeof workingHoursIdParamSchema>["par
 export type VetIdParam = z.infer<typeof vetIdParamSchema>["params"];
 export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>["body"];
 export type UpdateAppointmentInput = z.infer<typeof updateAppointmentSchema>["body"];
-export type AppointmentIdParam = z.infer<typeof appointmentIdParamSchema>["params"]; 
+export type AppointmentIdParam = z.infer<typeof appointmentIdParamSchema>["params"];
+export type UserIdParam = z.infer<typeof userIdParamSchema>["params"]; 

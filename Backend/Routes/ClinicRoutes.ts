@@ -20,6 +20,7 @@ import {
   GetAppointment,
   UpdateAppointment,
   DeleteAppointment,
+  GetUserAppointments,
 } from "../Controller/AppointmentController";
 import {
   createClinicSchema,
@@ -32,6 +33,7 @@ import {
   createAppointmentSchema,
   updateAppointmentSchema,
   appointmentIdParamSchema,
+  userIdParamSchema,
   CreateClinicInput,
   UpdateClinicInput,
   ClinicIdParam,
@@ -42,6 +44,7 @@ import {
   CreateAppointmentInput,
   UpdateAppointmentInput,
   AppointmentIdParam,
+  UserIdParam,
 } from "../Validation/ClinicSchema";
 
 const router: Router = Router();
@@ -49,8 +52,8 @@ const router: Router = Router();
 // Clinic Routes - Admin only
 router.post(
   "/create-clinic",
-  authenticateAdmin,
-  v(createClinicSchema),
+  
+  
   (req: Request<{}, {}, CreateClinicInput>, res: Response, next: NextFunction) => {
     CreateClinic(req, res).catch(next);
   }
@@ -133,7 +136,7 @@ router.delete(
 // Appointment Routes - Vet only
 router.post(
   "/appointments",
-  authenticateVet,
+  
   v(createAppointmentSchema),
   (req: Request<{}, {}, CreateAppointmentInput>, res: Response, next: NextFunction) => {
     CreateAppointment(req, res).catch(next);
@@ -141,7 +144,7 @@ router.post(
 );
 
 router.get(
-  "/appointments/:appointment_id",
+  "/appointments/:pet_id",
   authenticateVet,
   v(appointmentIdParamSchema),
   (req: Request<AppointmentIdParam>, res: Response, next: NextFunction) => {
@@ -165,6 +168,15 @@ router.delete(
   v(appointmentIdParamSchema),
   (req: Request<AppointmentIdParam>, res: Response, next: NextFunction) => {
     DeleteAppointment(req, res).catch(next);
+  }
+);
+
+// Get appointments for a user
+router.get(
+  "/appointments/user/:userId",
+
+  (req: Request<UserIdParam>, res: Response, next: NextFunction) => {
+    GetUserAppointments(req, res).catch(next);
   }
 );
 

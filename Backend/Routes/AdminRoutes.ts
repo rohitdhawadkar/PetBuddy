@@ -1,13 +1,16 @@
 import { Router, Request, Response, NextFunction } from "express";
 import v from "../Middleware/ValidationMiddleware";
-import { authenticateAdmin } from "../Middleware/AdminAuthMiddleware";
+import { adminAuth } from '../Middleware/adminAuth';
+import asyncHandler from 'express-async-handler';
 import {
   createAdminSchema,
   updateAdminSchema,
   adminIdParamSchema,
+  adminLoginSchema,
   CreateAdminInput,
   UpdateAdminInput,
   AdminIdParam,
+  AdminLoginInput,
 } from "../Validation/AdminSchema";
 
 import {
@@ -16,58 +19,88 @@ import {
   GetAllAdmins,
   UpdateAdmin,
   DeleteAdmin,
+  AdminLogin,
+  GetAdminStats,
+  GetAllUsersWithDetails,
+  GetAllVetsWithClinics,
+  GetAllTrainersWithDetails,
 } from "../Controller/AdminController";
 
 const router: Router = Router();
 
-// Create admin route with validation and auth
+// Admin login route
 router.post(
-  "/create-admin",
-  authenticateAdmin,
+  "/login",
+  v(adminLoginSchema),
+  asyncHandler(AdminLogin)
+);
+
+// Get admin stats route
+router.get(
+  "/stats",
+  adminAuth,
+  asyncHandler(GetAdminStats)
+);
+
+// Get all users with their details
+router.get(
+  "/users",
+  adminAuth,
+  asyncHandler(GetAllUsersWithDetails)
+);
+
+// Get all vets with their details
+router.get(
+  "/vets",
+  adminAuth,
+  asyncHandler(GetAllVetsWithClinics)
+);
+
+// Get all trainers with their details
+router.get(
+  "/trainers",
+  adminAuth,
+  asyncHandler(GetAllTrainersWithDetails)
+);
+
+// Create admin route
+router.post(
+  "/",
+  adminAuth,
   v(createAdminSchema),
-  (req: Request<{}, {}, CreateAdminInput>, res: Response, next: NextFunction) => {
-    CreateAdmin(req, res).catch(next);
-  }
+  asyncHandler(CreateAdmin)
 );
 
-// Get admin by ID route with validation and auth
+// Get all admins route
 router.get(
-  "/get-admin/:admin_id",
-  authenticateAdmin,
+  "/",
+  adminAuth,
+  asyncHandler(GetAllAdmins)
+);
+
+// Get admin by ID route
+router.get(
+  "/:admin_id",
+  adminAuth,
   v(adminIdParamSchema),
-  (req: Request<AdminIdParam>, res: Response, next: NextFunction) => {
-    GetAdmin(req, res).catch(next);
-  }
+  asyncHandler(GetAdmin)
 );
 
-// Get all admins route with auth
-router.get(
-  "/get-all-admins",
-  authenticateAdmin,
-  (req: Request, res: Response, next: NextFunction) => {
-    GetAllAdmins(req, res).catch(next);
-  }
-);
-
-// Update admin route with validation and auth
+// Update admin route
 router.put(
-  "/update-admin/:admin_id",
-  authenticateAdmin,
-  v(updateAdminSchema),
+  "/:admin_id",
+  adminAuth,
   v(adminIdParamSchema),
-  (req: Request<AdminIdParam, {}, UpdateAdminInput>, res: Response, next: NextFunction) => {
-    UpdateAdmin(req, res).catch(next);
-  }
+  v(updateAdminSchema),
+  asyncHandler(UpdateAdmin)
 );
 
-// Delete admin route with validation and auth
+// Delete admin route
 router.delete(
-  "/delete-admin/:admin_id",
-  authenticateAdmin,
+  "/:admin_id",
+  adminAuth,
   v(adminIdParamSchema),
-  (req: Request<AdminIdParam>, res: Response, next: NextFunction) => {
-    DeleteAdmin(req, res).catch(next);
-  }
+  asyncHandler(DeleteAdmin)
 );
 
 export default router; 

@@ -16,6 +16,10 @@ export async function CreateDietPlan(
   try {
     const { health_tracker_id, plan_name, start_date, status, notes } = req.body;
 
+    console.log("CreateDietPlan received:", { 
+      health_tracker_id, plan_name, start_date, status, notes 
+    });
+
     // Check if health tracker exists
     const healthTracker = await prisma.healthTracker.findUnique({
       where: { HealthTrackr_id: health_tracker_id },
@@ -26,25 +30,51 @@ export async function CreateDietPlan(
       return;
     }
 
-    const dietPlan = await prisma.dietPlan.create({
-      data: {
-        health_tracker_id,
-        plan_name,
-        start_date,
-        status,
-        notes,
-      },
-      include: {
-        HealthTracker: true,
-      },
+    // Check if a diet plan already exists for this health tracker
+    const existingPlan = await prisma.dietPlan.findUnique({
+      where: { health_tracker_id },
     });
+
+    let dietPlan;
+    
+    if (existingPlan) {
+      // Update existing plan
+      dietPlan = await prisma.dietPlan.update({
+        where: { health_tracker_id },
+        data: {
+          plan_name,
+          start_date,
+          status,
+          notes,
+        },
+        include: {
+          HealthTracker: true,
+        },
+      });
+    } else {
+      // Create a new diet plan if none exists
+      dietPlan = await prisma.dietPlan.create({
+        data: {
+          health_tracker_id,
+          plan_name,
+          start_date,
+          status,
+          notes,
+        },
+        include: {
+          HealthTracker: true,
+        },
+      });
+    }
 
     // Invalidate cache
     const cacheKey = `diet_plan:${health_tracker_id}`;
     await redis.del(cacheKey);
 
     res.status(201).json({
-      message: "Diet plan created successfully",
+      message: existingPlan 
+        ? "Diet plan updated successfully" 
+        : "Diet plan created successfully",
       data: dietPlan,
     });
   } catch (error) {

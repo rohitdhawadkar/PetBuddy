@@ -45,21 +45,68 @@ app.get("/", (req, res) => {
 // Google OAuth Routes
 app.get(
   "/auth/google",
+  (req: Request, res: Response, next: NextFunction) => {
+    console.log("Google OAuth initiation request received");
+    console.log("Current environment:", process.env.NODE_ENV || "development");
+    next();
+  },
   passport.authenticate("google", {
     session: false,
     scope: ["profile", "email"],
-  }),
+  })
 );
 
 app.get(
   "/auth/google/callback",
+  (req: Request, res: Response, next: NextFunction) => {
+    console.log("Google OAuth callback received");
+    console.log("Query parameters:", req.query);
+    next();
+  },
   passport.authenticate("google", {
     session: false,
     failureRedirect: "/login",
+    failWithError: true,
   }),
-  (req, res) => {
-    res.redirect(`/profile?token=${(req.user as any).token}`);
+  (req: Request, res: Response) => {
+    const userData = req.user as any;
+    
+    // Determine frontend URL based on environment
+    const frontendUrl = process.env.FRONTEND_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://petbuddy-frontend.vercel.app' 
+        : 'http://localhost:5173');
+    
+    console.log(`Frontend URL determined as: ${frontendUrl}`);
+    console.log(`User data: ${JSON.stringify(userData)}`);
+    
+    const redirectUrl = new URL('/oauth/callback', frontendUrl);
+    
+    // Add query parameters
+    redirectUrl.searchParams.append('token', userData.token);
+    
+    if (userData.hasPets && userData.firstPetId) {
+      redirectUrl.searchParams.append('pet_id', userData.firstPetId.toString());
+    }
+    
+    if (userData.isNewUser) {
+      redirectUrl.searchParams.append('new_user', 'true');
+    }
+    
+    const finalRedirectUrl = redirectUrl.toString();
+    console.log(`Redirecting to: ${finalRedirectUrl}`);
+    
+    // Redirect to the frontend OAuth handler
+    res.redirect(finalRedirectUrl);
   },
+  (err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error("Google OAuth authentication error:", err);
+    res.status(500).json({
+      error: "Authentication failed",
+      message: err.message,
+      details: process.env.NODE_ENV === 'development' ? err : undefined
+    });
+  }
 );
 
 app.get("/profile", (req, res, next) => {

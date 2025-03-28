@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 import { redis } from "./redis";
 
 // Create Weight Tracking Entry
+// In Backend/Controller/WeightTracking.ts
 export async function CreateWeightTracking(
   req: Request<{}, {}, { health_tracker_id: number; Weight: number; date: Date }>,
   res: Response
@@ -20,23 +21,44 @@ export async function CreateWeightTracking(
       return;
     }
 
-    const weightTracking = await prisma.weightTracking.create({
-      data: {
-        health_tracker_id,
-        Weight,
-        date,
-      },
-      include: {
-        HealthTracker: true,
-      },
+    // Check if weight tracking already exists
+    const existingWeightTracking = await prisma.weightTracking.findUnique({
+      where: { health_tracker_id },
     });
+
+    let weightTracking;
+    if (existingWeightTracking) {
+      // Update existing weight tracking
+      weightTracking = await prisma.weightTracking.update({
+        where: { health_tracker_id },
+        data: {
+          Weight,
+          date,
+        },
+        include: {
+          HealthTracker: true,
+        },
+      });
+    } else {
+      // Create new weight tracking
+      weightTracking = await prisma.weightTracking.create({
+        data: {
+          health_tracker_id,
+          Weight,
+          date,
+        },
+        include: {
+          HealthTracker: true,
+        },
+      });
+    }
 
     // Invalidate cache
     const cacheKey = `weight_tracking:${health_tracker_id}`;
     await redis.del(cacheKey);
 
     res.status(201).json({
-      message: "Weight tracking entry created successfully",
+      message: "Weight tracking entry created/updated successfully",
       data: weightTracking,
     });
   } catch (error) {

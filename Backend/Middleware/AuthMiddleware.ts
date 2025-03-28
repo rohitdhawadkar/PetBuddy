@@ -4,11 +4,12 @@ import { prisma } from "../Controller/prisma";
 
 interface JwtPayload {
   user_id: number;
-  email: string;
+  username: string;
 }
 
 interface AuthenticatedUser {
   user_id: number;
+  username: string | null;
   email: string;
 }
 
@@ -38,14 +39,20 @@ export const authenticateUser = async (
     // Verify token
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "your-secret-key"
+      process.env.JWT_SECRET || "jwt_secret"
     ) as JwtPayload;
+
+    if (!decoded.user_id) {
+      res.status(401).json({ msg: "Invalid token payload" });
+      return;
+    }
 
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { user_id: decoded.user_id },
       select: {
         user_id: true,
+        username: true,
         email: true,
       },
     });

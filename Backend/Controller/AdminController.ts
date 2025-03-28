@@ -1,14 +1,14 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from 'express';
 import { prisma } from "./prisma";
 import { redis } from "./redis";
 import bcrypt from "bcrypt";
-import { CreateAdminInput, UpdateAdminInput, AdminIdParam } from "../Validation/AdminSchema";
+import { CreateAdminInput, UpdateAdminInput, AdminIdParam, AdminLoginInput } from "../Validation/AdminSchema";
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Create Admin
-export const CreateAdmin = async (
-  req: Request<{}, {}, CreateAdminInput>,
-  res: Response
-): Promise<void> => {
+export const CreateAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { username, email, password, first_name, last_name, phone } = req.body;
 
@@ -60,38 +60,16 @@ export const CreateAdmin = async (
       },
     });
   } catch (error) {
-    console.error("Error creating admin:", error);
-    res.status(500).json({
-      message: "Error creating admin",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    next(error);
   }
 };
 
 // Get Admin by ID
-export const GetAdmin = async (
-  req: Request<AdminIdParam>,
-  res: Response
-): Promise<void> => {
+export const GetAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const admin_id = parseInt(req.params.admin_id, 10);
-
-    if (isNaN(admin_id)) {
-      res.status(400).json({ message: "Invalid admin ID" });
-      return;
-    }
-
-    // Try to get from cache first
-    const cacheKey = `admin:${admin_id}`;
-    const cachedData = await redis.get(cacheKey);
-
-    if (cachedData) {
-      res.status(200).json(JSON.parse(cachedData));
-      return;
-    }
-
+    const { admin_id } = req.params;
     const admin = await prisma.admin.findUnique({
-      where: { admin_id },
+      where: { admin_id: parseInt(admin_id) },
       select: {
         admin_id: true,
         username: true,
@@ -100,29 +78,22 @@ export const GetAdmin = async (
         last_name: true,
         phone: true,
         is_active: true,
-        last_login: true,
-        created_at: true,
-        updated_at: true,
       },
     });
 
     if (!admin) {
-      res.status(404).json({ message: "Admin not found" });
+      res.status(404).json({ message: 'Admin not found' });
       return;
     }
 
-    // Cache the response
-    await redis.setEx(cacheKey, 3600, JSON.stringify(admin));
-
-    res.status(200).json(admin);
+    res.json(admin);
   } catch (error) {
-    console.error("Error retrieving admin:", error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 };
 
 // Get all Admins
-export const GetAllAdmins = async (req: Request, res: Response): Promise<void> => {
+export const GetAllAdmins = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Try to get from cache first
     const cacheKey = "all_admins";
@@ -142,12 +113,6 @@ export const GetAllAdmins = async (req: Request, res: Response): Promise<void> =
         last_name: true,
         phone: true,
         is_active: true,
-        last_login: true,
-        created_at: true,
-        updated_at: true,
-      },
-      orderBy: {
-        created_at: "desc",
       },
     });
 
@@ -156,18 +121,14 @@ export const GetAllAdmins = async (req: Request, res: Response): Promise<void> =
 
     res.status(200).json(admins);
   } catch (error) {
-    console.error("Error retrieving admins:", error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 };
 
 // Update Admin
-export const UpdateAdmin = async (
-  req: Request<AdminIdParam, {}, UpdateAdminInput>,
-  res: Response
-): Promise<void> => {
+export const UpdateAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const admin_id = parseInt(req.params.admin_id, 10);
+    const { admin_id } = req.params;
     const {
       username,
       email,
@@ -178,13 +139,13 @@ export const UpdateAdmin = async (
       is_active,
     } = req.body;
 
-    if (isNaN(admin_id)) {
+    if (isNaN(parseInt(admin_id))) {
       res.status(400).json({ message: "Invalid admin ID" });
       return;
     }
 
     const existingAdmin = await prisma.admin.findUnique({
-      where: { admin_id },
+      where: { admin_id: parseInt(admin_id) },
     });
 
     if (!existingAdmin) {
@@ -196,7 +157,7 @@ export const UpdateAdmin = async (
     if (username || email) {
       const duplicateAdmin = await prisma.admin.findFirst({
         where: {
-          admin_id: { not: admin_id },
+          admin_id: { not: parseInt(admin_id) },
           OR: [
             { username: username || undefined },
             { email: email || undefined },
@@ -227,7 +188,7 @@ export const UpdateAdmin = async (
 
     // Update admin
     const updatedAdmin = await prisma.admin.update({
-      where: { admin_id },
+      where: { admin_id: parseInt(admin_id) },
       data: updateData,
       select: {
         admin_id: true,
@@ -237,9 +198,6 @@ export const UpdateAdmin = async (
         last_name: true,
         phone: true,
         is_active: true,
-        last_login: true,
-        created_at: true,
-        updated_at: true,
       },
     });
 
@@ -252,46 +210,146 @@ export const UpdateAdmin = async (
       data: updatedAdmin,
     });
   } catch (error) {
-    console.error("Error updating admin:", error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 };
 
 // Delete Admin
-export const DeleteAdmin = async (
-  req: Request<AdminIdParam>,
-  res: Response
-): Promise<void> => {
+export const DeleteAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const admin_id = parseInt(req.params.admin_id, 10);
-
-    if (isNaN(admin_id)) {
-      res.status(400).json({ message: "Invalid admin ID" });
-      return;
-    }
-
-    const existingAdmin = await prisma.admin.findUnique({
-      where: { admin_id },
-    });
-
-    if (!existingAdmin) {
-      res.status(404).json({ message: "Admin not found" });
-      return;
-    }
-
+    const { admin_id } = req.params;
     await prisma.admin.delete({
-      where: { admin_id },
+      where: { admin_id: parseInt(admin_id) },
+    });
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const AdminLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { username, password } = req.body as AdminLoginInput;
+
+    const admin = await prisma.admin.findUnique({
+      where: { username },
     });
 
-    // Invalidate cache
-    await redis.del(`admin:${admin_id}`);
-    await redis.del("all_admins");
+    if (!admin) {
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
+    }
 
-    res.status(200).json({
-      message: "Admin deleted successfully",
+    const isValidPassword = await bcrypt.compare(password, admin.password);
+    if (!isValidPassword) {
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
+    }
+
+    const token = jwt.sign(
+      { admin_id: admin.admin_id, is_active: admin.is_active },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    const { password: _, ...adminData } = admin;
+    res.json({ token, admin: adminData });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const GetAdminStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const [totalUsers, totalPets, totalVets, totalAppointments] = await Promise.all([
+      prisma.user.count(),
+      prisma.pet.count(),
+      prisma.vet.count(),
+      prisma.appointment.count(),
+    ]);
+
+    res.json({
+      totalUsers,
+      totalPets,
+      totalVets,
+      totalAppointments,
     });
   } catch (error) {
-    console.error("Error deleting admin:", error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
+  }
+};
+
+// Get all users with their pets and health trackers
+export const GetAllUsersWithDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        pets: {
+          include: {
+            PetProfile: {
+              include: {
+                HealthTracker: {
+                  include: {
+                    WeightTracking: true,
+                    MedicalRecord: {
+                      include: {
+                        Vet: true
+                      }
+                    },
+                    DietPlan: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all vets with their clinics
+export const GetAllVetsWithClinics = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const vets = await prisma.vet.findMany({
+      include: {
+        clinic: true,
+        WorkingHours: true
+      }
+    });
+
+    res.json(vets);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all trainers with their styles and working hours
+export const GetAllTrainersWithDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const trainers = await prisma.trainer.findMany({
+      include: {
+        TrainingStyle: true,
+        WorkingHours: true,
+        Sessions: {
+          include: {
+            pet: true
+          }
+        },
+        Progress: {
+          include: {
+            pet: true
+          }
+        }
+      }
+    });
+
+    res.json(trainers);
+  } catch (error) {
+    next(error);
   }
 }; 

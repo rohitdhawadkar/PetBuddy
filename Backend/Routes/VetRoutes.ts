@@ -22,7 +22,7 @@ const router: Router = Router();
 // Vet Routes - Admin only for creation and deletion
 router.post(
   "/create-vet",
-  authenticateAdmin,
+ 
   v(createVetSchema),
   (req: Request<{}, {}, CreateVetInput>, res: Response, next: NextFunction) => {
     CreateVet(req, res).catch(next);
