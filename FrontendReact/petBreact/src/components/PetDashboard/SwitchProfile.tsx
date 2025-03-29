@@ -15,7 +15,7 @@ interface PetProfile {
 
 const SwitchProfile: React.FC = () => {
   const navigate = useNavigate();
-  const [petProfiles, setPetProfiles] = useState<any[]>([]); 
+  const [petProfiles, setPetProfiles] = useState<PetProfile[]>([]); 
   const [pets, setPets] = useState<any[]>([]); // Adjust type as needed
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,18 +33,16 @@ const SwitchProfile: React.FC = () => {
         setLoading(true);
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         if (!user.user_id) {
-          setError("User not found. Please log in.");
-          setLoading(false);
-          return;
+          throw new Error("User not logged in");
         }
   
-        // Check if profiles are in cache
+        // First check if there's a cached version
         const cachedProfiles = localStorage.getItem("cachedPetProfiles");
         if (cachedProfiles) {
           const { profiles, pets, timestamp } = JSON.parse(cachedProfiles);
           const now = new Date().getTime();
           const cacheAge = now - timestamp;
-  
+    
           // If cache is less than 5 minutes old, use it
           if (cacheAge < 5 * 60 * 1000) {
             setPetProfiles(profiles);
@@ -79,23 +77,6 @@ const SwitchProfile: React.FC = () => {
     localStorage.setItem("selectedPetProfileId", petProfileId.toString());
     setSelectedProfileId(petProfileId);
     navigate("/dashboard");
-  };
-
-  const addNewProfile = async (newProfile: PetProfile) => {
-    // Your existing logic to add a new profile...
-    
-    // Update the cache with the new profile
-    const cachedProfiles = localStorage.getItem("cachedPetProfiles");
-    if (cachedProfiles) {
-      const { profiles, pets, timestamp } = JSON.parse(cachedProfiles);
-      profiles.push(newProfile); // Add the new profile to the list
-      pets.push(newProfile); // Add the new profile to the pets list
-      localStorage.setItem("cachedPetProfiles", JSON.stringify({
-        profiles,
-        pets,
-        timestamp: new Date().getTime()
-      }));
-    }
   };
 
   const getBadgeColors = (index: number) => {
@@ -238,7 +219,7 @@ const SwitchProfile: React.FC = () => {
                         {index % 3 === 0 ? 'Active' : index % 3 === 1 ? 'Healthy' : 'Vaccinated'}
                       </span>
                       <button
-                        onClick={() => handleProfileSwitch(profile.PetProfile_id)}
+                        onClick={() => handleProfileSwitch(profile.PetProfile_id!)}
                         disabled={isSelected}
                         className={`text-white font-medium py-2 px-4 rounded-lg transition-colors ${
                           isSelected 
