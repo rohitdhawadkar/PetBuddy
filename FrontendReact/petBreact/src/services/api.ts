@@ -1,27 +1,25 @@
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import axios, { InternalAxiosRequestConfig } from "axios";
 
-// Create an Axios instance with a base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000', // Use env variable with fallback
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000", // Use env variable with fallback
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   withCredentials: true, // Important for CORS with credentials
 });
 
-// Add a request interceptor to include the token in headers for authenticated requests
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('token');
+    const token =
+      localStorage.getItem("adminToken") || localStorage.getItem("token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error: any) => Promise.reject(error)
+  (error: any) => Promise.reject(error),
 );
 
-// Types
 export interface PetDetails {
   pet_name: string;
   breed: string;
@@ -57,13 +55,14 @@ export interface AuthResponse {
   newUser?: any;
 }
 
-// Auth service functions
 export const authService = {
-  // Register a new user
   register: async (userData: UserRegisterData): Promise<AuthResponse> => {
     try {
       console.log("Registering user with data:", userData);
-      const response = await api.post<AuthResponse>('/Auth/user-register', userData);
+      const response = await api.post<AuthResponse>(
+        "/Auth/user-register",
+        userData,
+      );
       console.log("Registration response:", response.data);
       return response.data;
     } catch (error) {
@@ -72,25 +71,25 @@ export const authService = {
     }
   },
 
-  // Login user
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
       console.log("Attempting login with:", credentials);
-      
-      // Make sure we have at least email OR username defined, but not both null
+
       if (!credentials.email && !credentials.username) {
         throw new Error("Either email or username must be provided");
       }
-      
-      const response = await api.post<AuthResponse>('/Auth/user-login', credentials);
+
+      const response = await api.post<AuthResponse>(
+        "/Auth/user-login",
+        credentials,
+      );
       console.log("Login response:", response.data);
-      
-      // Store token in localStorage if login is successful
+
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error("Login error details:", error);
@@ -98,22 +97,83 @@ export const authService = {
     }
   },
 
+  // Google OAuth login
+  loginWithGoogle: () => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+    // Save the current location before redirecting
+    localStorage.setItem("login_redirect", window.location.pathname);
+
+    // Redirect to Google OAuth endpoint
+    window.location.href = `${apiUrl}/auth/google`;
+  },
+
+  // Handle OAuth callback and token storage
+  handleOAuthCallback: () => {
+    // Check for token in URL query params (from OAuth redirect)
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    console.log("OAuth callback called, token:", token ? "Found" : "Not found");
+    console.log("URL query parameters:", window.location.search);
+
+    if (token) {
+      // Store token in localStorage
+      localStorage.setItem("token", token);
+
+      // Get the pet ID if available
+      const petId = params.get("pet_id");
+      if (petId) {
+        localStorage.setItem("currentPetId", petId);
+      }
+
+      // Determine where to redirect based on user state
+      let redirectPath = "/dashboard";
+
+      if (params.get("new_user") === "true") {
+        // New user needs to create a profile first
+        redirectPath = "/dashboard/create-pet";
+      } else if (petId) {
+        // Existing user with pets
+        redirectPath = `/dashboard?pet=${petId}`;
+      } else {
+        // Existing user without pets
+        redirectPath = "/dashboard/create-pet";
+      }
+
+      console.log("Redirecting to:", redirectPath);
+
+      // Redirect to the appropriate page (but don't do it immediately,
+      // let the component handle this)
+      return {
+        success: true,
+        redirectPath,
+      };
+    }
+
+    console.error("No token found in URL params");
+    return { success: false };
+  },
+
   // Logout user
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Remove all items stored in localStorage by our site
+    localStorage.removeItem("token");
+    localStorage.removeItem("cachedPets");
+    localStorage.clear();
+    localStorage.removeItem("user");
   },
 
   // Get current user info
   getCurrentUser: (): UserData | null => {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
   },
 
   // Check if user is logged in
   isLoggedIn: (): boolean => {
-    return !!localStorage.getItem('token');
-  }
+    return !!localStorage.getItem("token");
+  },
 };
 
-export default api; 
+export default api;
